@@ -1,0 +1,63 @@
+on:
+  push:
+    branches:
+      - colin/try_mr
+  workflow_dispatch:
+jobs:
+  build_ca_host_x86_64:
+    # needs: [create_llvm_cache_16]
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install prerequisites
+        run: |
+          pip install lit
+          sudo apt-get install -y spirv-tools
+          sudo apt-get install -y clang-format    
+      - name: Install Ninja
+        uses: llvm/actions/install-ninja@main
+      - name: Checkout repo
+        uses: actions/checkout@v3    
+      - name: Use llvm 16
+        uses: actions/cache/restore@v3
+        with:
+          path: llvm_install/**
+          key: llvm-ubuntu-22.04-v16-RelAssert 
+          fail-on-cache-miss: true
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          # A full build of llvm, clang, lld, and lldb takes about 250MB
+          # of ccache space. There's not much reason to have more than this,
+          # because we usually won't need to save cache entries from older
+          # builds.  Also, there is an overall 10GB cache limit, and each
+          # run creates a new cache entry so we want to ensure that we have
+          # enough cache space for all the tests to run at once and still
+          # fit under the 10 GB limit.
+          max-size: 500M
+          key: sccache-${{ runner.name }}
+          variant: sccache          
+
+      - name: cmake_ca
+        run:
+          cmake -GNinja
+                -Bbuild
+                -DCA_MUX_TARGETS_TO_ENABLE="host"
+                -DCA_ENABLE_API=cl
+                -DCA_LLVM_INSTALL_DIR=${{github.workspace}}/llvm_install
+                -DCA_ENABLE_DEBUG_SUPPORT=ON
+                -DCMAKE_BUILD_TYPE=ReleaseAssert
+                -DCA_ENABLE_HOST_IMAGE_SUPPORT=OFF
+                -DCA_HOST_ENABLE_BUILTIN_KERNEL=ON   
+                -DCA_HOST_ENABLE_BUILTINS_EXTENSION=ON  
+                -DCA_HOST_ENABLE_FP16=OFF           
+                -DCA_CL_ENABLE_OFFLINE_KERNEL_TESTS=OFF
+                -DCA_ASSEMBLE_SPIRV_LL_LIT_TESTS_OFFLINE=OFF
+                -DOCL_EXTENSION_cl_intel_unified_shared_memory=ON
+                -DOCL_EXTENSION_cl_khr_command_buffer=ON
+                -DOCL_EXTENSION_cl_khr_command_buffer_mutable_dispatch=ON
+                -DCA_CL_ENABLE_ICD_LOADER=ON .
+
+      - name: build_ca
+        run:
+          cmake --build build --target UnitCL
