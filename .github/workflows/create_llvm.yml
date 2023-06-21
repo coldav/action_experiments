@@ -3,7 +3,7 @@ name: cache_llvm
 on:
   push:
     branches:
-      - colin/try_llvm # main
+      - main
     path: .github/workflows/create_llvm.yml
   workflow_dispatch:
 
