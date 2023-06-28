@@ -1,0 +1,28 @@
+name: build-ock
+description: Action to build the oneapi-construction-kit but not run
+
+inputs:
+  build_type:
+    description: 'build type (Release, ReleaseAssert)'
+    default: ReleaseAssert
+  mux_targets_enable:
+    description: 'TBD'
+    default: host
+
+runs:
+  # We don't want a new docker just a list of steps, so mark as composite
+  using: "composite"
+  steps:
+    - name: run_other_compo
+      uses: ./.github/actions/compo
+      with:
+        wibble: wibble
+        wobble: wobble
+
+    - name: cmake_ock
+      shell: bash
+      run:
+        echo ${{inputs.build_type}}
+        echo ${{inputs.mux_targets_enable}}
+
+

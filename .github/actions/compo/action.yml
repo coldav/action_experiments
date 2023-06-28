@@ -1,0 +1,21 @@
+name: compo
+description: Action to build the oneapi-construction-kit but not run
+
+inputs:
+  wibble:
+    description: 'build type (Release, ReleaseAssert)'
+    default: ReleaseAssert
+  wobble:
+    description: 'TBD'
+    default: host
+
+runs:
+  using: "composite"
+  steps:
+    - name: wibble wobble
+      shell: bash
+      run:
+        echo wibble is ${{inputs.wibble}}
+        echo wobble is ${{inputs.wobble}}
+
+

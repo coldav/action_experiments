@@ -1,0 +1,25 @@
+# Simple workflow for running merge request tests
+name: compo tester
+
+on:
+ # temporary
+  push:
+
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  build_ca_host_x86_64:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3    
+      - name: build_ock_top_level
+        uses: ./.github/actions/build_ock
+        with:
+          build_type: Release
+          mux_targets_enable: host    
+
