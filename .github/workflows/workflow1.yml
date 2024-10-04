@@ -9,8 +9,8 @@ on:
           - 17
           - 18
           - 19
-      benchmark_testing:
-        description: 'benchit'
+      update_cache:
+        description: 'update_cache'
         default: false
         type: boolean
   pull_request:
@@ -18,14 +18,34 @@ on:
 jobs:
   print-tag:
     runs-on: ubuntu-latest
-    if:  ${{ inputs.llvm_version }} 
+    if:  ${{ github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Print the input tag to STDOUT
-        run: echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.benchmark_testing }}
+        run: |
+         echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.update_cache }}
+         cat "$GITHUB_ENV"
+         echo ${{ github.event }}
+         echo "LLVM_VERSION=${{ inputs.llvm_version }}" >> $GITHUB_ENV"
+         echo "UPDATE_CACHE=${{ inputs.update_cache }}" >> $GITHUB_ENV"
 
   run-on-pull:
-    if:  ${{ inputs.llvm_version }} != ""   
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Print the input tag to STDOUT
-        run: echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.benchmark_testing }}
+        run: |
+          echo  The llvm_version are ${{ inputs.llvm_version }}, update_cache is ${{ inputs.update_cache }}
+          cat "$GITHUB_ENV"
+          echo ${{ github.event }}
+          echo "LLVM_VERSION=18" >> $env:GITHUB_ENV"
+          echo "UPDATE_CACHE=false" >> $env:GITHUB_ENV"
+
+  run-on-pull_2:
+    name: Call other workflow
+    if: ${{ github.event_name == 'pull_request' }}    
+    needs: run-on-pull
+    uses: ./.github/workflows/workflow_callee.yml
+    with:
+      llvm_version: 18
+      update_cache: true
+
