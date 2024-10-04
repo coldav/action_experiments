@@ -28,22 +28,22 @@ jobs:
          echo "LLVM_VERSION=${{ inputs.llvm_version }}" >> $GITHUB_ENV"
          echo "UPDATE_CACHE=${{ inputs.update_cache }}" >> $GITHUB_ENV"
 
-  run-on-pull:
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print the input tag to STDOUT
-        run: |
-          echo  The llvm_version are ${{ inputs.llvm_version }}, update_cache is ${{ inputs.update_cache }}
-          cat "$GITHUB_ENV"
-          echo ${{ github.event }}
-          echo "LLVM_VERSION=18" >> $env:GITHUB_ENV"
-          echo "UPDATE_CACHE=false" >> $env:GITHUB_ENV"
+  # run-on-pull:
+  #   if: ${{ github.event_name == 'pull_request' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Print the input tag to STDOUT
+  #       run: |
+  #         echo  The llvm_version are ${{ inputs.llvm_version }}, update_cache is ${{ inputs.update_cache }}
+  #         cat "$GITHUB_ENV"
+  #         echo ${{ github.event }}
+  #         echo "LLVM_VERSION=18" >> $env:GITHUB_ENV"
+  #         echo "UPDATE_CACHE=false" >> $env:GITHUB_ENV"
 
   run-on-pull_2:
     name: Call other workflow
     if: ${{ github.event_name == 'pull_request' }}    
-    needs: run-on-pull
+    # needs: run-on-pull
     uses: ./.github/workflows/workflow_callee.yml
     with:
       llvm_version: 18
