@@ -1,27 +1,18 @@
 on:
   workflow_dispatch:
     inputs:
-      logLevel:
+      llvm_version:
         description: 'Log level'
-        required: true
-        default: 'warning'
+        default: 18
         type: choice
         options:
-          - info
-          - warning
-          - debug
-      print_tags:
-        description: 'True to print to STDOUT'
-        required: true
+          - 17
+          - 18
+          - 19
+      benchmark_testing:
+        description: 'benchit'
+        default: false
         type: boolean
-      tags:
-        description: 'Test scenario tags'
-        required: true
-        type: string
-      environment:
-        description: 'Environment to run tests against'
-        type: environment
-        required: true
   pull_request:
 
 jobs:
