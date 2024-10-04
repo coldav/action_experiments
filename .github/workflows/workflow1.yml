@@ -18,7 +18,7 @@ on:
 jobs:
   print-tag:
     runs-on: ubuntu-latest
-    # if:  ${{ inputs.print_tags }} 
+    if:  ${{ inputs.llvm_version }} 
     steps:
       - name: Print the input tag to STDOUT
-        run: echo  The tags are ${{ inputs.tags }} 
+        run: echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.benchmark_testing }}
