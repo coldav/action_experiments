@@ -18,12 +18,29 @@ on:
   pull_request:
     paths:
       - '.github/workflows/workflow_callee.yml'
+
+env:
+  LLVM_VERSION: 17
+  UPDATE_CACHE: false
 jobs:
+  update-values:
+     runs-on: ubuntu-latest
+     steps:
+       - name: update envs
+         run: |
+          if [ -n "${{ inputs.llvm_version}}" ]; then
+              echo LLVM_VERSION=${{ inputs.llvm_version}} >> $GITHUB_ENV
+              echo UPDATE_CACHE=${{ inputs.update_cache}} >> $GITHUB_ENV
+          fi
+          cat $GITHUB_ENV
+
   print-inputs:
     runs-on: ubuntu-latest
+    needs: update-values
     steps:
       - name: Print the input tag to STDOUT
         run: |
           echo ${{ inputs.llvm_version }}
           echo ${{ inputs.update_cache }}
+          echo LLVM="$LLVM_VERSION" CACHE="$UPDATE_CACHE"
 
