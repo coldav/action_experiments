@@ -1,0 +1,29 @@
+on:
+  workflow_call:
+    inputs:
+      llvm_version:
+        required: true
+        type: string
+      update_cache:
+        required: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      llvm_version:
+        required: true
+        type: string
+      update_cache:
+        required: true
+        type: boolean
+  pull_request:
+    paths:
+      - '.github/workflows/workflow_callee.yml'
+jobs:
+  print-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print the input tag to STDOUT
+        run: |
+          echo ${{ inputs.llvm_version }}
+          echo ${{ inputs.update_cache }}
+
