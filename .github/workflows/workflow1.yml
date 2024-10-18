@@ -1,51 +1,32 @@
 on:
-  workflow_dispatch:
-    inputs:
-      llvm_version:
-        description: 'Log level'
-        default: 18
-        type: choice
-        options:
-          - 17
-          - 18
-          - 19
-      update_cache:
-        description: 'update_cache'
-        default: false
-        type: boolean
   pull_request:
 
 jobs:
-  print-tag:
-    runs-on: ubuntu-latest
-    if:  ${{ github.event_name == 'workflow_dispatch' }}
+  job_1:
+    runs-on: ubuntu-latest  
     steps:
-      - name: Print the input tag to STDOUT
+      - name: cp ls
         run: |
-         echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.update_cache }}
-         cat "$GITHUB_ENV"
-         echo ${{ github.event }}
-         echo "LLVM_VERSION=${{ inputs.llvm_version }}" >> $GITHUB_ENV"
-         echo "UPDATE_CACHE=${{ inputs.update_cache }}" >> $GITHUB_ENV"
+          cp `which ls` myls
+    
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ock
+          path: myls
+          retention-days: 5
 
-  # run-on-pull:
-  #   if: ${{ github.event_name == 'pull_request' }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Print the input tag to STDOUT
-  #       run: |
-  #         echo  The llvm_version are ${{ inputs.llvm_version }}, update_cache is ${{ inputs.update_cache }}
-  #         cat "$GITHUB_ENV"
-  #         echo ${{ github.event }}
-  #         echo "LLVM_VERSION=18" >> $env:GITHUB_ENV"
-  #         echo "UPDATE_CACHE=false" >> $env:GITHUB_ENV"
-
-  run-on-pull_2:
-    name: Call other workflow
-    if: ${{ github.event_name == 'pull_request' }}    
-    # needs: run-on-pull
-    uses: ./.github/workflows/workflow_callee.yml
-    with:
-      llvm_version: 18
-      update_cache: true
+  job_2:
+    name: do ls
+    needs: job_1
+    runs-on: ubuntu-latest  
+    steps:
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: ock
+      - shell: bash
+        run: |
+          chmod +x myls
+          ./myls
 
