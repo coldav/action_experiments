@@ -15,9 +15,9 @@ on:
       update_cache:
         required: true
         type: boolean
-  pull_request:
-    paths:
-      - '.github/workflows/workflow_callee.yml'
+  # pull_request:
+  #   paths:
+  #     - '.github/workflows/workflow_callee.yml'
 
 env:
   LLVM_VERSION: 17
