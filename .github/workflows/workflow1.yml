@@ -1,51 +1,68 @@
 on:
-  workflow_dispatch:
-    inputs:
-      llvm_version:
-        description: 'Log level'
-        default: 18
-        type: choice
-        options:
-          - 17
-          - 18
-          - 19
-      update_cache:
-        description: 'update_cache'
-        default: false
-        type: boolean
   pull_request:
 
 jobs:
-  print-tag:
-    runs-on: ubuntu-latest
-    if:  ${{ github.event_name == 'workflow_dispatch' }}
+  job_1:
+    runs-on: ubuntu-latest  
     steps:
-      - name: Print the input tag to STDOUT
+      - name: cp ls
         run: |
-         echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.update_cache }}
-         cat "$GITHUB_ENV"
-         echo ${{ github.event }}
-         echo "LLVM_VERSION=${{ inputs.llvm_version }}" >> $GITHUB_ENV"
-         echo "UPDATE_CACHE=${{ inputs.update_cache }}" >> $GITHUB_ENV"
+          wget https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.1/LLVM-19.1.1-Linux-X64.tar.xz
+          cp LLVM-19.1.1-Linux-X64.tar.xz foo.tar.xz
+          cp LLVM-19.1.1-Linux-X64.tar.xz foo2.tar.xz
+          cp LLVM-19.1.1-Linux-X64.tar.xz foo3.tar.xz
+          cp LLVM-19.1.1-Linux-X64.tar.xz foo4.tar.xz
+          ls -l foo*
+    
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ock
+          path: foo.tar.xz
+          retention-days: 5
 
-  run-on-pull:
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ock2
+          path: foo2.tar.xz
+          retention-days: 5
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ock3
+          path: foo3.tar.xz
+          retention-days: 5
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ock4
+          path: foo4.tar.xz
+          retention-days: 5
+
+  job_2:
+    name: do ls
+    needs: job_1
+    runs-on: ubuntu-latest  
     steps:
-      - name: Print the input tag to STDOUT
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: ock
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: ock2
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: ock3
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: ock4
+      - shell: bash
         run: |
-          echo  The llvm_version are ${{ inputs.llvm_version }}, update_cache is ${{ inputs.update_cache }}
-          cat "$GITHUB_ENV"
-          echo ${{ github.event }}
-          echo "LLVM_VERSION=18" >> $env:GITHUB_ENV"
-          echo "UPDATE_CACHE=false" >> $env:GITHUB_ENV"
-
-  run-on-pull_2:
-    name: Call other workflow
-    if: ${{ github.event_name == 'pull_request' }}    
-    needs: run-on-pull
-    uses: ./.github/workflows/workflow_callee.yml
-    with:
-      llvm_version: 18
-      update_cache: true
+          ls -l foo*
 
