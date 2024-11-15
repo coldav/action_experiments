@@ -12,30 +12,97 @@ jobs:
   #     matrix: ${{ steps.set-matrix.outputs.matrix_include }}
   #   steps:
   #   - id: set-matrix
-  #     run: echo "matrix_include=[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]" >> $GITHUB_OUTPUT
+  #     run: |
+  #       # echo "matrix_include=[{\"os_flags\": \"wibble\"},{\"os_flags\": \"wibble_x64\", \"target\": \"x64\"}]" >> $GITHUB_OUTPUT
+  #       echo 'matrix_include=["os_flags", "wibble"]' >> $GITHUB_OUTPUT
+  #       cat $GITHUB_OUTPUT
 
-  job2:
-    # needs: job1
+  calc_matrix:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [x64, aarch64]
-        include: 
-          - os_flags: wibble
-          - os_flags: wibble_x64
-            target: x64
+    name: Calc matrix
+    outputs:
+        target: ${{ steps.step1.outputs.target }}
+        # matrix_include: ${{ steps.step1.outputs.matrix_include }}
+    steps:
+      - id: step1
+        run: |
+          # # python ./github/scripts/update_vars.py >> "$GITHUB_OUTPUT"
+          # # echo "target_list=$target_list" >> "$GITHUB_OUTPUT"
+          # # echo "os_list=$os_list" >> "$GITHUB_OUTPUT"        
+          # echo 'target=["x86", "aarch64"]' >> "$GITHUB_OUTPUT"
+          # # echo 'os_list=["os_flags", "wibble"]' >> "$GITHUB_OUTPUT"
+          # # echo 'matrix_include=[{"os_flags": "wibble"},{"os_flags": "wibble_x64", "target": "x86"}]' >> $GITHUB_OUTPUT
+          echo 'target=[ "host_x86", "host_aarch64"]' >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
+  # create_ock_artefacts:
+  #   # needs: calc_matrix  
+  #   strategy:
+  #     matrix:
+
+  #       target: ["x86", "aarch64"]
+  #       # target: ${{ fromJson(needs.calc_matrix.outputs.target) }}
+  #       # include: ${{ fromJson(needs.calc_matrix.outputs.matrix_include) }}
+  #       exclude:
+  #         - target: x86
+  #       # os: ${{ fromJson(needs.calc_matrix.outputs.os_list) }}      
+  #       # build_type: [RelAssert]
+  #       # exclude:
+  #       #   - os: windows-2019
+  #       #   - target: riscv64
+  #         # - target: aarch64
+  create_ock_artefacts:
+    runs-on: ubuntu-latest
+    needs: calc_matrix
+    steps:
+    # - name: Checkout repo
+    #   uses: actions/checkout@v4.1.0
+    # - id: calc_vars2
+    #   uses: ./.github/actions/calc_vars
+    #   with:
+    #     target: ${{ matrix.target }}
+    # - id: calc_vars
+    #   run:
+    #     echo "arch=aarch64" >> $GITHUB_OUTPUT
+    - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_x86') }}
+      run: |
+        # echo target=${{ matrix.target }}
+        # echo arch=${{ steps.calc_vars2.outputs.arch }}
+        # echo arch=${{ steps.calc_vars.outputs.arch }}
+        # echo arch=${{ fromJson('{"host_x86":{"arch": "x86_64"},"host_aarch64":{"arch": "arch64"}}').needs.calc_matrix.outputs.target }}.arch
+        echo Run x86
+
+    - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_aarch64') }}
+      run: |
+        echo Run aarch64
+
+    - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_riscv64') }}
+      run: |
+        echo Run riscv64
+
+  # job2:
+  #   # needs: job1
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       target: [x64, aarch64]
+  #       wibble: ${{ fromJSON(needs.job1.outputs.matrix_include) }}
+        #'[{\"os_flags\": \"wibble\"},{\"os_flags\": \"wibble_x64\", \"target\": \"x64\"}]') }}
+          # - os_flags: wibble
+          # - os_flags: wibble_x64
+          #   target: x64
         #${{fromJson('[{"os_flags":"wibble"},{"os_flags":"bar","targets":"x64"}]')}}
       # {\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}
       # {\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}
       # needs.job1.outputs.matrix_include)}}
         # targets: ["x64","aarch64", "riscv64"]
         # include: ${{toJSON(needs.job1.outputs.matrix_include)}}
-    steps:
-    - run: |
-      echo ${{ toJSON(matrix.targets) }}
-      echo ${{ toJson(matrix.include) }}
-      echo target=${{ matrix.targets }}
-      echo os_flags=${{ matrix.os_flags }}
+    # steps:
+    # - run: |
+    #     # echo ${{ toJSON(matrix.target) }}
+    #     echo ${{ toJson(matrix) }}
+    #     echo target=${{ matrix.target }}
+    #     echo os_flags=${{ matrix.os_flags }}
 
   # calc_matrix:
   #   runs-on: ubuntu-latest
