@@ -1,0 +1,16 @@
+name: wibble
+description: wibble
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run:
+        mkdir foo;
+        mkdir foo/jim;
+        cd foo/jim;
+        pwd
+
+    - shell: bash
+      run:
+        pwd

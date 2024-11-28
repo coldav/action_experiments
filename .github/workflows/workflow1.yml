@@ -1,39 +1,82 @@
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
-env:
-  target_list: '["x64","aarch64", "riscv64"]'
-  os_list: '["ubuntu-22.04", "windows-2019"]'
+# env:
+#   target_list: '["x64","aarch64", "riscv64"]'
+#   os_list: '["ubuntu-22.04", "windows-2019"]'
 
 jobs:
+  job1:
+    permissions:
+      actions: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4.1.0
+      - name: delete cache
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+        run: |
+          gh cache delete ccache-ccache-build-wibble-2025-02-18T17:39:18.983Z
+
+      # - name: Setup ccache
+      #   uses: hendrikmuhs/ccache-action@53911442209d5c18de8a31615e0923161e435875 # v1.2.16
+      #   with:
+      #     max-size: 200M
+      #     key: ccache-build-wibble
+      #     variant: ccache
+      #     save: true
+      # - name: build
+      #   run: |
+      #     /usr/lib/ccache/gcc hello.c -c -o hello1
+      #     /usr/lib/ccache/gcc hello.c -c -o hello2
+      #     /usr/lib/ccache/gcc hello.c -c -o hello3
+      #     /usr/lib/ccache/gcc hello.c -c -o hello4
+      #     /usr/lib/ccache/gcc hello.c -c -o hello5
+      #     /usr/lib/ccache/gcc hello.c -c -o hello6
+      #     /usr/lib/ccache/gcc hello.c -c -o hello7
+      #     /usr/lib/ccache/gcc hello.c -c -o hello8
+      #     ccache -s
+
+
+
   # job1:
   #   runs-on: ubuntu-latest
   #   outputs:
-  #     matrix: ${{ steps.set-matrix.outputs.matrix_include }}
+  #     matrix: ${{ steps.myid.outputs.matrix }}
   #   steps:
-  #   - id: set-matrix
+  #   - id: myid
   #     run: |
   #       # echo "matrix_include=[{\"os_flags\": \"wibble\"},{\"os_flags\": \"wibble_x64\", \"target\": \"x64\"}]" >> $GITHUB_OUTPUT
-  #       echo 'matrix_include=["os_flags", "wibble"]' >> $GITHUB_OUTPUT
+  #       echo 'matrix="aarch64"' >> $GITHUB_OUTPUT
   #       cat $GITHUB_OUTPUT
+  #   - if: steps.myid.output.matrix == 'aarch64'
+  #     run:
+  #       echo is aarch64
+  #   - if: steps.myid.output.matrix != 'aarch64'
+  #     run:
+  #       echo is NOT aarch64
 
-  calc_matrix:
-    runs-on: ubuntu-latest
-    name: Calc matrix
-    outputs:
-        target: ${{ steps.step1.outputs.target }}
-        # matrix_include: ${{ steps.step1.outputs.matrix_include }}
-    steps:
-      - id: step1
-        run: |
-          # # python ./github/scripts/update_vars.py >> "$GITHUB_OUTPUT"
-          # # echo "target_list=$target_list" >> "$GITHUB_OUTPUT"
-          # # echo "os_list=$os_list" >> "$GITHUB_OUTPUT"        
-          # echo 'target=["x86", "aarch64"]' >> "$GITHUB_OUTPUT"
-          # # echo 'os_list=["os_flags", "wibble"]' >> "$GITHUB_OUTPUT"
-          # # echo 'matrix_include=[{"os_flags": "wibble"},{"os_flags": "wibble_x64", "target": "x86"}]' >> $GITHUB_OUTPUT
-          echo 'target=[ "host_x86", "host_aarch64"]' >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
+  # calc_matrix:
+  #   runs-on: ubuntu-latest
+  #   name: Calc matrix
+  #   outputs:
+  #       target: ${{ steps.step1.outputs.target }}
+  #       # matrix_include: ${{ steps.step1.outputs.matrix_include }}
+  #   steps:
+  #     - id: step1
+  #       run: |
+  #         # # python ./github/scripts/update_vars.py >> "$GITHUB_OUTPUT"
+  #         # # echo "target_list=$target_list" >> "$GITHUB_OUTPUT"
+  #         # # echo "os_list=$os_list" >> "$GITHUB_OUTPUT"        
+  #         # echo 'target=["x86", "aarch64"]' >> "$GITHUB_OUTPUT"
+  #         # # echo 'os_list=["os_flags", "wibble"]' >> "$GITHUB_OUTPUT"
+  #         # # echo 'matrix_include=[{"os_flags": "wibble"},{"os_flags": "wibble_x64", "target": "x86"}]' >> $GITHUB_OUTPUT
+  #         echo 'target=[ "host_x86", "host_aarch64"]' >> $GITHUB_OUTPUT
+  #         cat $GITHUB_OUTPUT
 
   # create_ock_artefacts:
   #   # needs: calc_matrix  
@@ -51,34 +94,34 @@ jobs:
   #       #   - os: windows-2019
   #       #   - target: riscv64
   #         # - target: aarch64
-  create_ock_artefacts:
-    runs-on: ubuntu-latest
-    needs: calc_matrix
-    steps:
-    # - name: Checkout repo
-    #   uses: actions/checkout@v4.1.0
-    # - id: calc_vars2
-    #   uses: ./.github/actions/calc_vars
-    #   with:
-    #     target: ${{ matrix.target }}
-    # - id: calc_vars
-    #   run:
-    #     echo "arch=aarch64" >> $GITHUB_OUTPUT
-    - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_x86') }}
-      run: |
-        # echo target=${{ matrix.target }}
-        # echo arch=${{ steps.calc_vars2.outputs.arch }}
-        # echo arch=${{ steps.calc_vars.outputs.arch }}
-        # echo arch=${{ fromJson('{"host_x86":{"arch": "x86_64"},"host_aarch64":{"arch": "arch64"}}').needs.calc_matrix.outputs.target }}.arch
-        echo Run x86
+  # create_ock_artefacts:
+  #   runs-on: ubuntu-latest
+  #   needs: calc_matrix
+  #   steps:
+  #   # - name: Checkout repo
+  #   #   uses: actions/checkout@v4.1.0
+  #   # - id: calc_vars2
+  #   #   uses: ./.github/actions/calc_vars
+  #   #   with:
+  #   #     target: ${{ matrix.target }}
+  #   # - id: calc_vars
+  #   #   run:
+  #   #     echo "arch=aarch64" >> $GITHUB_OUTPUT
+  #   - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_x86') }}
+  #     run: |
+  #       # echo target=${{ matrix.target }}
+  #       # echo arch=${{ steps.calc_vars2.outputs.arch }}
+  #       # echo arch=${{ steps.calc_vars.outputs.arch }}
+  #       # echo arch=${{ fromJson('{"host_x86":{"arch": "x86_64"},"host_aarch64":{"arch": "arch64"}}').needs.calc_matrix.outputs.target }}.arch
+  #       echo Run x86
 
-    - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_aarch64') }}
-      run: |
-        echo Run aarch64
+  #   - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_aarch64') }}
+  #     run: |
+  #       echo Run aarch64
 
-    - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_riscv64') }}
-      run: |
-        echo Run riscv64
+  #   - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_riscv64') }}
+  #     run: |
+  #       echo Run riscv64
 
   # job2:
   #   # needs: job1
