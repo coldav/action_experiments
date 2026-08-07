@@ -1,51 +1,261 @@
 on:
-  workflow_dispatch:
-    inputs:
-      llvm_version:
-        description: 'Log level'
-        default: 18
-        type: choice
-        options:
-          - 17
-          - 18
-          - 19
-      update_cache:
-        description: 'update_cache'
-        default: false
-        type: boolean
   pull_request:
+  push:
+    branches:
+      - main
+
+# env:
+#   target_list: '["x64","aarch64", "riscv64"]'
+#   os_list: '["ubuntu-22.04", "windows-2019"]'
 
 jobs:
-  print-tag:
-    runs-on: ubuntu-latest
-    if:  ${{ github.event_name == 'workflow_dispatch' }}
-    steps:
-      - name: Print the input tag to STDOUT
-        run: |
-         echo  The llvm_version are ${{ inputs.llvm_version }}, benchmark_testing is ${{ inputs.update_cache }}
-         cat "$GITHUB_ENV"
-         echo ${{ github.event }}
-         echo "LLVM_VERSION=${{ inputs.llvm_version }}" >> $GITHUB_ENV"
-         echo "UPDATE_CACHE=${{ inputs.update_cache }}" >> $GITHUB_ENV"
-
-  run-on-pull:
-    if: ${{ github.event_name == 'pull_request' }}
+  job1:
+    permissions:
+      actions: write
     runs-on: ubuntu-latest
     steps:
-      - name: Print the input tag to STDOUT
+      - name: Checkout repo
+        uses: actions/checkout@v4.1.0
+      - name: delete cache
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
         run: |
-          echo  The llvm_version are ${{ inputs.llvm_version }}, update_cache is ${{ inputs.update_cache }}
-          cat "$GITHUB_ENV"
-          echo ${{ github.event }}
-          echo "LLVM_VERSION=18" >> $env:GITHUB_ENV"
-          echo "UPDATE_CACHE=false" >> $env:GITHUB_ENV"
+          gh cache delete ccache-ccache-build-wibble-2025-02-18T17:39:18.983Z
 
-  run-on-pull_2:
-    name: Call other workflow
-    if: ${{ github.event_name == 'pull_request' }}    
-    needs: run-on-pull
-    uses: ./.github/workflows/workflow_callee.yml
-    with:
-      llvm_version: 18
-      update_cache: true
+      # - name: Setup ccache
+      #   uses: hendrikmuhs/ccache-action@53911442209d5c18de8a31615e0923161e435875 # v1.2.16
+      #   with:
+      #     max-size: 200M
+      #     key: ccache-build-wibble
+      #     variant: ccache
+      #     save: true
+      # - name: build
+      #   run: |
+      #     /usr/lib/ccache/gcc hello.c -c -o hello1
+      #     /usr/lib/ccache/gcc hello.c -c -o hello2
+      #     /usr/lib/ccache/gcc hello.c -c -o hello3
+      #     /usr/lib/ccache/gcc hello.c -c -o hello4
+      #     /usr/lib/ccache/gcc hello.c -c -o hello5
+      #     /usr/lib/ccache/gcc hello.c -c -o hello6
+      #     /usr/lib/ccache/gcc hello.c -c -o hello7
+      #     /usr/lib/ccache/gcc hello.c -c -o hello8
+      #     ccache -s
+
+
+
+  # job1:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     matrix: ${{ steps.myid.outputs.matrix }}
+  #   steps:
+  #   - id: myid
+  #     run: |
+  #       # echo "matrix_include=[{\"os_flags\": \"wibble\"},{\"os_flags\": \"wibble_x64\", \"target\": \"x64\"}]" >> $GITHUB_OUTPUT
+  #       echo 'matrix="aarch64"' >> $GITHUB_OUTPUT
+  #       cat $GITHUB_OUTPUT
+  #   - if: steps.myid.output.matrix == 'aarch64'
+  #     run:
+  #       echo is aarch64
+  #   - if: steps.myid.output.matrix != 'aarch64'
+  #     run:
+  #       echo is NOT aarch64
+
+  # calc_matrix:
+  #   runs-on: ubuntu-latest
+  #   name: Calc matrix
+  #   outputs:
+  #       target: ${{ steps.step1.outputs.target }}
+  #       # matrix_include: ${{ steps.step1.outputs.matrix_include }}
+  #   steps:
+  #     - id: step1
+  #       run: |
+  #         # # python ./github/scripts/update_vars.py >> "$GITHUB_OUTPUT"
+  #         # # echo "target_list=$target_list" >> "$GITHUB_OUTPUT"
+  #         # # echo "os_list=$os_list" >> "$GITHUB_OUTPUT"        
+  #         # echo 'target=["x86", "aarch64"]' >> "$GITHUB_OUTPUT"
+  #         # # echo 'os_list=["os_flags", "wibble"]' >> "$GITHUB_OUTPUT"
+  #         # # echo 'matrix_include=[{"os_flags": "wibble"},{"os_flags": "wibble_x64", "target": "x86"}]' >> $GITHUB_OUTPUT
+  #         echo 'target=[ "host_x86", "host_aarch64"]' >> $GITHUB_OUTPUT
+  #         cat $GITHUB_OUTPUT
+
+  # create_ock_artefacts:
+  #   # needs: calc_matrix  
+  #   strategy:
+  #     matrix:
+
+  #       target: ["x86", "aarch64"]
+  #       # target: ${{ fromJson(needs.calc_matrix.outputs.target) }}
+  #       # include: ${{ fromJson(needs.calc_matrix.outputs.matrix_include) }}
+  #       exclude:
+  #         - target: x86
+  #       # os: ${{ fromJson(needs.calc_matrix.outputs.os_list) }}      
+  #       # build_type: [RelAssert]
+  #       # exclude:
+  #       #   - os: windows-2019
+  #       #   - target: riscv64
+  #         # - target: aarch64
+  # create_ock_artefacts:
+  #   runs-on: ubuntu-latest
+  #   needs: calc_matrix
+  #   steps:
+  #   # - name: Checkout repo
+  #   #   uses: actions/checkout@v4.1.0
+  #   # - id: calc_vars2
+  #   #   uses: ./.github/actions/calc_vars
+  #   #   with:
+  #   #     target: ${{ matrix.target }}
+  #   # - id: calc_vars
+  #   #   run:
+  #   #     echo "arch=aarch64" >> $GITHUB_OUTPUT
+  #   - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_x86') }}
+  #     run: |
+  #       # echo target=${{ matrix.target }}
+  #       # echo arch=${{ steps.calc_vars2.outputs.arch }}
+  #       # echo arch=${{ steps.calc_vars.outputs.arch }}
+  #       # echo arch=${{ fromJson('{"host_x86":{"arch": "x86_64"},"host_aarch64":{"arch": "arch64"}}').needs.calc_matrix.outputs.target }}.arch
+  #       echo Run x86
+
+  #   - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_aarch64') }}
+  #     run: |
+  #       echo Run aarch64
+
+  #   - if: ${{ contains(needs.calc_matrix.outputs.target, 'host_riscv64') }}
+  #     run: |
+  #       echo Run riscv64
+
+  # job2:
+  #   # needs: job1
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       target: [x64, aarch64]
+  #       wibble: ${{ fromJSON(needs.job1.outputs.matrix_include) }}
+        #'[{\"os_flags\": \"wibble\"},{\"os_flags\": \"wibble_x64\", \"target\": \"x64\"}]') }}
+          # - os_flags: wibble
+          # - os_flags: wibble_x64
+          #   target: x64
+        #${{fromJson('[{"os_flags":"wibble"},{"os_flags":"bar","targets":"x64"}]')}}
+      # {\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}
+      # {\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}
+      # needs.job1.outputs.matrix_include)}}
+        # targets: ["x64","aarch64", "riscv64"]
+        # include: ${{toJSON(needs.job1.outputs.matrix_include)}}
+    # steps:
+    # - run: |
+    #     # echo ${{ toJSON(matrix.target) }}
+    #     echo ${{ toJson(matrix) }}
+    #     echo target=${{ matrix.target }}
+    #     echo os_flags=${{ matrix.os_flags }}
+
+  # calc_matrix:
+  #   runs-on: ubuntu-latest
+  #   name: Calc matrix
+  #   outputs:
+  #       matrix: ${{ steps.step1.outputs.matrix }}
+  #       # os_list: ${{ steps.step1.outputs.os_list }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - id: step1
+  #       run: |
+  #         # echo "target_list=$target_list" >> "$GITHUB_OUTPUT"
+  #         echo "matrix="{\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}" >> $GITHUB_OUTPUT
+  # run_matrix:
+  #   runs-on: ubuntu-latest
+  #   needs: calc_matrix
+  #   strategy:
+  #     matrix: ${{ fromJson(needs.calc_matrix.outputs.matrix) }}
+  #       # target: ${{ fromJson(needs.calc_matrix.outputs.target_list) }}
+  #       # include: ${{ fromJson(needs.calc_matrix.outputs.extra_vars) }}
+  #       # {\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}
+  #   steps:
+  #     - uses: actions/setup-node@v3
+  #     - run: echo "${{ matrix.target }}:${{ matrix.project }}"
+    # filter_matrix:
+    #   runs-on: ubuntu-latest
+    #   needs: affected-apps
+    #   outputs:
+    #       apps: ${{ steps.step1.outputs.filtered }}
+    #   steps:
+    #     - id: step1
+    #       run: | 
+    #           echo "$APPS"
+    #           RESULT=$(echo $APPS | jq -c --argjson toRemove '["app1", "app2"]' 'map(select(. as $v | $toRemove | index($v) | not))')
+    #           echo "$RESULT"
+    #           echo "filtered=$RESULT" >> "$GITHUB_OUTPUT"
+    #       env:
+    #       APPS: ${{ needs.affected-apps.outputs.apps }}
+    # filtered_matrix:
+    #   runs-on: ubuntu-latest
+    #   needs: filter_matrix
+    #   strategy:
+    #     matrix:
+    #       app: ${{ fromJson(needs.filter_matrix.outputs.apps) }}
+    #   steps:
+    #     - uses: actions/setup-node@v3
+    #     - run: echo "${{ matrix.app }}"
+
+# jobs:
+#   job_1:
+#     runs-on: ubuntu-latest  
+#     steps:
+#       - name: cp ls
+#         run: |
+#           wget https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.1/LLVM-19.1.1-Linux-X64.tar.xz
+#           cp LLVM-19.1.1-Linux-X64.tar.xz foo.tar.xz
+#           cp LLVM-19.1.1-Linux-X64.tar.xz foo2.tar.xz
+#           cp LLVM-19.1.1-Linux-X64.tar.xz foo3.tar.xz
+#           cp LLVM-19.1.1-Linux-X64.tar.xz foo4.tar.xz
+#           ls -l foo*
+    
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ock
+#           path: foo.tar.xz
+#           retention-days: 5
+
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ock2
+#           path: foo2.tar.xz
+#           retention-days: 5
+
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ock3
+#           path: foo3.tar.xz
+#           retention-days: 5
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ock4
+#           path: foo4.tar.xz
+#           retention-days: 5
+
+#   job_2:
+#     name: do ls
+#     needs: job_1
+#     runs-on: ubuntu-latest  
+#     steps:
+#       - name: Download math result for job 1
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ock
+#       - name: Download math result for job 1
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ock2
+#       - name: Download math result for job 1
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ock3
+#       - name: Download math result for job 1
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ock4
+#       - shell: bash
+#         run: |
+#           ls -l foo*
 

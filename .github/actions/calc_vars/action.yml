@@ -1,0 +1,22 @@
+name: calc vars
+description: calc vars
+
+# Some of these are riscv or host target specific, but it does not harm at present to
+# overset cmake values
+inputs:
+  target:
+    description: 'TBD'
+    default: host_x86
+
+outputs:
+  arch:
+    value: ${{ steps.calc_vars.outputs.arch }}
+runs:
+  # We don't want a new docker just a list of steps, so mark as composite
+  using: "composite"
+  steps:
+  # - 
+    - shell: ${{ inputs.shell_to_use }}
+      id: calc_vars
+      run:
+        echo "arch=aarch64" >> $GITHUB_OUTPUT
